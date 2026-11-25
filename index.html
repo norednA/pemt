@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEMT – Controle de Plataformas Elevatórias</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#fff; --ink:#1c2430; --muted:#5f6b7a; --line:#dde3ea;
+    --brand:#0b4a8b; --ok:#1a7f37; --warn:#b26a00; --bad:#c62828; --off:#8a94a3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  header{position:sticky;top:0;z-index:1000;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:12px;flex-wrap:wrap}
+  .brand{font-weight:700;font-size:18px;letter-spacing:.3px}
+  .brand span{font-weight:400;opacity:.85;font-size:14px;margin-left:6px}
+  nav{display:flex;gap:6px}
+  .tab{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;padding:7px 14px;border-radius:999px;font-size:14px;cursor:pointer}
+  .tab.active{background:#fff;color:var(--brand);font-weight:600}
+  .banner{background:#fff4d6;color:#6b4b00;padding:8px 16px;font-size:13px;border-bottom:1px solid #f0dca0}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  .hidden{display:none!important}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 10px;font-size:16px}
+  label{display:block;font-weight:600;font-size:14px;margin:10px 0 0}
+  label input,label select,label textarea{display:block;width:100%;margin-top:6px;font:inherit;font-weight:400;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .lbl{font-weight:600;font-size:14px;margin:10px 0 6px}
+  .lbl small{font-weight:400;color:var(--muted);margin-left:6px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:64px;padding:9px 6px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+  .seg button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .seg.big button{padding:11px 6px}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .item:first-child{border-top:0}
+  .item .txt{flex:1;font-size:14px}
+  .crit{display:inline-block;font-size:11px;font-weight:600;color:var(--bad);border:1px solid var(--bad);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+  .item .seg{flex:0 0 170px}
+  .item .seg button{min-width:0;padding:7px 4px;font-size:13px}
+  .item .seg button.on.good{background:var(--ok);border-color:var(--ok)}
+  .item .seg button.on.bad{background:var(--bad);border-color:var(--bad)}
+  .item .seg button.on.na{background:var(--off);border-color:var(--off)}
+  .num{display:inline-block;min-width:22px;color:var(--muted);font-weight:600}
+  .tag-op{display:inline-block;font-size:11px;font-weight:600;color:var(--brand);border:1px solid var(--brand);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+  .alerta{background:#fff4e0;color:#6b4b00;border:1px solid #f0d199;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:8px}
+  .item.miss{background:#fff1f1}
+  .link{background:none;border:0;color:var(--brand);text-decoration:underline;padding:6px 0;font:inherit;font-size:13px;cursor:pointer}
+  .primary{width:100%;margin-top:14px;padding:14px;border:0;border-radius:10px;background:var(--brand);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+  .primary:disabled{opacity:.6}
+  .ghost{padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:14px;cursor:pointer}
+  .res{margin-top:12px;font-size:14px}
+  .chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;color:#fff;white-space:nowrap}
+  .s-ok{background:var(--ok)} .s-warn{background:var(--warn)} .s-bad{background:var(--bad)} .s-off{background:var(--off)}
+  .err{color:var(--bad);font-size:14px;margin-top:10px}
+  .toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:var(--muted);font-size:13px;gap:8px;flex-wrap:wrap}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .kpi b{display:block;font-size:26px;line-height:1.1}
+  .kpi span{font-size:13px;color:var(--muted)}
+  .kpi.ok b{color:var(--ok)} .kpi.warn b{color:var(--warn)} .kpi.bad b{color:var(--bad)}
+  .note{font-size:12px;color:var(--muted);margin:0 0 14px}
+  .tw{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr.click{cursor:pointer} tr.click:hover{background:#f6f9fc}
+  .late{color:var(--bad);font-weight:700}
+  .muted{color:var(--muted)}
+  .modal{position:fixed;inset:0;background:rgba(10,20,35,.55);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+  .modal .card{max-width:360px;width:100%}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1c2430;color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:3000;max-width:90%}
+  .done-big{text-align:center;padding:10px 0}
+  .done-big .chip{font-size:16px;padding:6px 16px;margin:8px 0}
+  .pend{background:#fff4e0;color:#6b4b00;border:1px solid #f0d199;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+  @media (max-width:520px){ .item{flex-direction:column;align-items:stretch} .item .seg{flex:none} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">PEMT <span>Controle de Plataformas Elevatórias</span></div>
+  <nav><button id="tab-reg" class="tab">Registrar</button><button id="tab-pai" class="tab">Painel</button></nav>
+</header>
+<div id="demo-banner" class="banner hidden">Modo demonstração: os dados ficam só neste navegador. Preencha <https://script.google.com/macros/s/AKfycbwc-okOlnbkK_kcqHYzOA2xchTZogcE-By5ryo_FazAiYiI2zGg9LXgTso2qsaQNdnL/exec?action=status&pin=2244> no código para usar a planilha compartilhada.</div>
+
+<main>
+  <div id="pend" class="pend hidden"></div>
+
+  <!-- ===================== REGISTRAR ===================== -->
+  <section id="v-reg" class="hidden">
+    <form id="form" novalidate>
+      <div class="card">
+        <label>Equipamento<select id="f-id"></select></label>
+        <div class="lbl">Tipo de registro</div>
+        <div class="seg big" id="f-tipo">
+          <button type="button" data-v="Checklist pré-uso" class="on">Pré-uso</button>
+          <button type="button" data-v="Movimentação">Movimentação</button>
+          <button type="button" data-v="Fim de uso">Fim de uso</button>
+        </div>
+        <label>Emitente (operador)<input id="f-op" autocomplete="name" placeholder="Nome e sobrenome"></label>
+        <label>Matrícula<input id="f-mat" inputmode="numeric" autocomplete="off"></label>
+        <label>ATIV <span class="muted" style="font-weight:400">– opcional</span><input id="f-ativ" autocomplete="off" placeholder="Nº da atividade / OS"></label>
+      </div>
+
+      <div class="card">
+        <label style="margin-top:0">Local onde a plataforma está (ou ficou)<input id="f-local" list="locais" autocomplete="off" placeholder="Ex.: Pátio – Posição 12, Oficina, TPS piso 2"></label>
+        <datalist id="locais"></datalist>
+        <label>Horímetro (h) <span class="muted" style="font-weight:400">– opcional</span><input id="f-hor" type="number" inputmode="decimal" min="0" step="0.1"></label>
+      </div>
+
+      <div class="card" id="ck-card">
+        <div class="lbl">Análise prévia – FB-LS-GEN-F22002 <small>S = Sim · N = Não · NA = Não aplicável</small></div>
+        <div class="alerta">Atenção: nas perguntas 3, 4 e 8 a resposta segura é <b>NÃO</b>. Verde = resposta conforme; vermelho = não conforme.</div>
+        <div id="ck"></div>
+      </div>
+
+      <div class="card" id="env-card">
+        <label>Outros empregados envolvidos <span class="muted" style="font-weight:400">– opcional</span><textarea id="f-env" rows="3" placeholder="Um por linha: Nome – Matrícula"></textarea></label>
+      </div>
+
+      <div class="card">
+        <label>Observações<textarea id="f-obs" rows="3" placeholder="Obrigatório se houver resposta não conforme"></textarea></label>
+        <div id="res" class="res"></div>
+        <div id="f-err" class="err hidden"></div>
+        <button type="submit" id="btn-send" class="primary">Enviar registro</button>
+      </div>
+    </form>
+
+    <div id="done" class="card hidden">
+      <div class="done-big">
+        <div style="font-size:17px;font-weight:700" id="done-title">Registro enviado</div>
+        <div id="done-chip"></div>
+        <div id="done-txt" class="muted" style="font-size:14px"></div>
+        <button id="btn-new" class="primary">Novo registro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAINEL ===================== -->
+  <section id="v-pai" class="hidden">
+    <div class="toolbar"><span id="upd">Carregando…</span><button id="btn-ref" class="ghost">Atualizar</button></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card"><h3>Situação atual</h3><div class="tw"><table id="t-eq"></table></div></div>
+    <div class="card">
+      <h3>Histórico</h3>
+      <label style="max-width:260px;margin-top:0">Filtrar equipamento<select id="h-filtro"></select></label>
+      <div class="tw" style="margin-top:10px"><table id="t-hist"></table></div>
+    </div>
+  </section>
+</main>
+
+<div id="pin-modal" class="modal hidden">
+  <div class="card">
+    <h3>Código de acesso</h3>
+    <p class="muted" style="font-size:14px;margin:0">Digite o código fornecido pela coordenação. Ele fica salvo neste aparelho.</p>
+    <label>Código<input id="pin-in" type="password" inputmode="numeric" autocomplete="off"></label>
+    <div id="pin-err" class="err hidden">Código inválido.</div>
+    <button id="pin-ok" class="primary">Entrar</button>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — o que você normalmente vai alterar
+   ===================================================================== */
+const CONFIG = {
+  // URL do "App da Web" do Google Apps Script (termina em /exec).
+  // Vazio = MODO DEMONSTRAÇÃO (dados só neste navegador).
+  API_URL: '',
+
+  HORAS_ALERTA: 24,          // plataforma sem registro há mais que isso fica em vermelho
+  ATUALIZAR_SEG: 60,         // atualização automática do painel
+
+  // Itens do checklist FB-LS-GEN-F22002 (mesma ordem e texto do formulário).
+  // ok   = resposta esperada ('S' ou 'N'). Resposta diferente (exceto NA) = não conformidade.
+  // tipo = 'critico'  -> não conformidade BLOQUEIA a plataforma
+  //        'restricao'-> plataforma fica "Liberada com restrição"
+  //        'operador' -> uso NÃO autorizado para este operador (status da plataforma não muda)
+  ITENS: [
+    { id:'01', ok:'S', tipo:'operador',  txt:'O operador é capacitado especificamente para a marca e modelo de plataforma?' },
+    { id:'02', ok:'S', tipo:'operador',  txt:'Os envolvidos fazem o uso de todos os EPIs necessários?' },
+    { id:'03', ok:'N', tipo:'critico',   txt:'Há vazamento de óleo?' },
+    { id:'04', ok:'N', tipo:'critico',   txt:'Há vazamento de fluido de bateria?' },
+    { id:'05', ok:'S', tipo:'restricao', txt:'O nível de óleo hidráulico foi verificado e está OK?' },
+    { id:'06', ok:'S', tipo:'restricao', txt:'O nível do óleo do motor foi verificado e está OK?' },
+    { id:'07', ok:'S', tipo:'restricao', txt:'A bateria está em bom funcionamento?' },
+    { id:'08', ok:'N', tipo:'critico',   txt:'Há ferrugem, corrosão ou oxidação, trincas aparentes em soldas ou componentes, deformações ou danos na estrutura da máquina?' },
+    { id:'09', ok:'S', tipo:'critico',   txt:'Os componentes elétricos (fiação/cabos) estão devidamente isolados e em bom estado?' },
+    { id:'10', ok:'S', tipo:'critico',   txt:'As mangueiras hidráulicas e conexões estão instaladas de forma adequada, sem modificações?' },
+    { id:'11', ok:'S', tipo:'critico',   txt:'Os motores de acionamento (frente e ré) estão funcionando perfeitamente?' },
+    { id:'12', ok:'S', tipo:'critico',   txt:'A porta de entrada e a extensão da plataforma estão em boas condições?' },
+    { id:'13', ok:'S', tipo:'critico',   txt:'Todos os elementos de fixação (porcas, parafusos e outros sistemas de fixação) estão nos seus lugares e devidamente apertados?' },
+    { id:'14', ok:'S', tipo:'restricao', txt:'As bandejas do chassi estão fechadas e travadas?' },
+    { id:'15', ok:'S', tipo:'critico',   txt:'As botoeiras de parada de emergência, alarmes, buzina e sinalizadores estão funcionando e em bom estado de conservação?' },
+    { id:'16', ok:'S', tipo:'critico',   txt:'O joystick de controle da plataforma está sem folgas e seus acionamentos funcionando perfeitamente?' },
+    { id:'17', ok:'S', tipo:'critico',   txt:'O guarda-corpo está em boas condições, sem deformações e/ou rachaduras?' },
+    { id:'18', ok:'S', tipo:'restricao', txt:'O equipamento está limpo, livre de restos de fios, graxa, poeiras ou outros provenientes de serviços executados?' },
+    { id:'19', ok:'S', tipo:'critico',   txt:'Os pontos de ancoragem estão em conformidade?' },
+    { id:'20', ok:'S', tipo:'critico',   txt:'As rodas estão com bom funcionamento?' },
+    { id:'21', ok:'S', tipo:'critico',   txt:'Os pneus estão em condições de uso?' },
+    { id:'22', ok:'S', tipo:'critico',   txt:'Os freios estão em bom funcionamento?' },
+    { id:'23', ok:'S', tipo:'critico',   txt:'Os botões de emergência e válvula de descida estão operantes?' }
+  ]
+};
+
+/* ===================================================================== */
+const PRE = 'Checklist pré-uso', MOV = 'Movimentação', FIM = 'Fim de uso';
+const $ = s => document.querySelector(s);
+const DEMO = !CONFIG.API_URL;
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { if (v === '' || v == null) return null; const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? null : n; };
+const fmt = iso => { if (!iso) return '—'; const d = new Date(iso); return isNaN(d) ? '—' : d.toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'}); };
+const horasDesde = iso => { const d = new Date(iso); return isNaN(d) ? null : (Date.now() - d.getTime()) / 36e5; };
+const clsStatus = s => s === 'Liberada' ? 's-ok' : s === 'Liberada com restrição' ? 's-warn' : s === 'Bloqueada' ? 's-bad' : 's-off';
+const corStatus = s => ({'Liberada':'#1a7f37','Liberada com restrição':'#b26a00','Bloqueada':'#c62828'}[s] || '#8a94a3');
+const nomeEq = e => (e && String(e.Apelido || '').trim()) || (e && e.ID) || '';
+const nomePorId = id => nomeEq(data.equipamentos.find(x => String(x.ID) === String(id))) || id;
+const chip = s => `<span class="chip ${clsStatus(s)}">${esc(s || 'Sem registro')}</span>`;
+function toast(msg, ms=3500){ const t=$('#toast'); t.textContent=msg; t.classList.remove('hidden'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.add('hidden'), ms); }
+
+let data = { equipamentos: [], registros: [] };
+let pin = store.get('pemt_pin') || '';
+
+/* ---------------- Modo demonstração ---------------- */
+const Demo = {
+  key: 'pemt_demo_v5',
+  load(){ const s = store.get(this.key); if (s) { try { return JSON.parse(s); } catch(e){} } const d = this.seed(); this.save(d); return d; },
+  save(d){ store.set(this.key, JSON.stringify(d)); },
+  seed(){
+    const h = x => new Date(Date.now() - x*36e5).toISOString();
+    const eq = [
+      ['PLEV0001','Genie Z60/34 (2002)','Liberada','Em uso','Pátio – Posição 3',-29.99305,-51.17320,'Carlos Souza',PRE,h(1.5),1532,'Genie Diesel'],
+      ['PLEV0002','Haulotte Compact 12 (elétrica)','Liberada','Disponível','Oficina de manutenção',-29.99520,-51.16890,'Ana Lima',FIM,h(5),884,'Haulotte'],
+      ['PLEV0004','Nano 7.1E – lado ar','Liberada com restrição','Em uso','Pátio – Posição 8',-29.99230,-51.17480,'Paulo Reis',PRE,h(3),410,'Nano 0004'],
+      ['PLEV0007','Spider X600AJ','Bloqueada','Fora de operação','Oficina de manutenção',-29.99535,-51.16870,'Carlos Souza',PRE,h(20),3105,'Spider'],
+      ['PLEV0008','Nano 5.2 SP-X (2023) – lado terra','Liberada','Disponível','TPS – Saguão embarque',-29.99410,-51.17150,'Ana Lima',MOV,h(31),220,'Nano 0008'],
+      ['PLEV0009','Nano 8.0E','Liberada','Disponível','TECA – Doca 2',-29.99780,-51.16620,'Paulo Reis',FIM,h(8),650,'Nano 0009'],
+      ['PLEV0010','Genie Z4525 (2023)','Liberada','Disponível','Pátio – Posição 12',-29.99280,-51.17410,'Carlos Souza',FIM,h(10),190,'Genie Elétrica']
+    ].map(r => ({ID:r[0],Modelo:r[1],NumeroSerie:'',Status:r[2],Uso:r[3],Local:r[4],Operador:r[7],UltimoTipo:r[8],UltimoRegistro:r[9],Horimetro:r[10],Apelido:r[11]}));
+    const reg = eq.map(e => ({DataHora:e.UltimoRegistro,ID:e.ID,Tipo:e.UltimoTipo,Status:e.Status,Uso:e.Uso,Local:e.Local,Operador:e.Operador,Horimetro:e.Horimetro,ItensNC:e.ID==='PLEV0007'?'03 Há vazamento de óleo? = S':e.ID==='PLEV0004'?'05 O nível de óleo hidráulico foi verificado e está OK? = N':'',NaoConformidades:e.ID==='PLEV0007'?'Vazamento no cilindro de elevação':e.ID==='PLEV0004'?'Nível abaixo do mínimo, completar':''}))
+      .sort((a,b) => b.DataHora.localeCompare(a.DataHora));
+    return { equipamentos: eq, registros: reg };
+  }
+};
+
+function aplicarLocal(d){
+  const e = data.equipamentos.find(x => String(x.ID) === String(d.id));
+  if (!e) throw new Error('Equipamento não cadastrado: ' + d.id);
+  const quando = d.dataHora || new Date().toISOString();
+  const status = d.status || e.Status || '';
+  const uso = d.uso || e.Uso || '';
+  data.registros.unshift({DataHora:quando,ID:d.id,Tipo:d.tipo,Status:status,Uso:uso,Local:d.local,Operador:d.operador,Horimetro:d.horimetro??'',ItensNC:(d.itensNC||[]).join('; '),NaoConformidades:d.obs||'',Matricula:d.matricula||'',ATIV:d.ativ||'',Envolvidos:d.envolvidos||'',Respostas:d.respostas||''});
+  Object.assign(e, {Status:status,Uso:uso,Local:d.local,Operador:d.operador,UltimoTipo:d.tipo,UltimoRegistro:quando,Horimetro:d.horimetro??e.Horimetro});
+  Demo.save(data);
+}
+
+/* ---------------- Comunicação com a planilha ---------------- */
+async function carregar(){
+  if (DEMO) { data = Demo.load(); return; }
+  const r = await fetch(CONFIG.API_URL + '?action=status&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+  const j = await r.json();
+  if (!j.ok) { if (/PIN/i.test(j.erro || '')) { pedirPin(true); } throw new Error(j.erro || 'Erro ao carregar'); }
+  data = { equipamentos: j.equipamentos || [], registros: (j.registros || []).sort((a,b) => String(b.DataHora).localeCompare(String(a.DataHora))) };
+  store.set('pemt_cache', JSON.stringify(data));
+}
+async function postar(payload){
+  if (DEMO) { aplicarLocal(payload); return; }
+  const r = await fetch(CONFIG.API_URL, { method:'POST', body: JSON.stringify({ ...payload, pin }) }); // text/plain: sem preflight CORS
+  const j = await r.json();
+  if (!j.ok) { const e = new Error(j.erro || 'Erro ao gravar'); e.servidor = true; throw e; }
+}
+
+/* Fila offline: registros que não puderam ser enviados ficam no aparelho */
+const fila = {
+  ler(){ try { return JSON.parse(store.get('pemt_fila') || '[]'); } catch(e){ return []; } },
+  gravar(a){ store.set('pemt_fila', JSON.stringify(a)); mostrarFila(); },
+  add(p){ const a = this.ler(); a.push(p); this.gravar(a); }
+};
+function mostrarFila(){
+  const n = fila.ler().length, el = $('#pend');
+  if (n) { el.textContent = `${n} registro(s) guardado(s) neste aparelho aguardando conexão. Serão enviados automaticamente.`; el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+async function enviarFila(){
+  let a = fila.ler(); if (!a.length || DEMO) return;
+  const resto = [];
+  for (const p of a) {
+    try { await postar(p); }
+    catch(e){ if (e.servidor) toast('Registro de ' + p.id + ' recusado: ' + e.message, 6000); else resto.push(p); }
+  }
+  fila.gravar(resto);
+}
+
+/* ---------------- PIN ---------------- */
+function pedirPin(erro){
+  $('#pin-err').classList.toggle('hidden', !erro);
+  $('#pin-in').value = '';
+  $('#pin-modal').classList.remove('hidden');
+  setTimeout(() => $('#pin-in').focus(), 50);
+}
+$('#pin-ok').onclick = async () => {
+  pin = $('#pin-in').value.trim(); if (!pin) return;
+  store.set('pemt_pin', pin);
+  $('#pin-modal').classList.add('hidden');
+  await atualizarTudo();
+};
+$('#pin-in').addEventListener('keydown', e => { if (e.key === 'Enter') $('#pin-ok').click(); });
+
+/* ---------------- Registrar ---------------- */
+let tipo = PRE, resp = {};
+
+function montarChecklist(){
+  $('#ck').innerHTML = CONFIG.ITENS.map(i => `
+    <div class="item" data-id="${esc(i.id)}">
+      <div class="txt"><span class="num">${esc(i.id)}</span> ${esc(i.txt)}${i.tipo === 'critico' ? '<span class="crit">crítico</span>' : i.tipo === 'operador' ? '<span class="tag-op">operador</span>' : ''}</div>
+      <div class="seg"><button type="button" data-v="S">S</button><button type="button" data-v="N">N</button><button type="button" data-v="NA">NA</button></div>
+    </div>`).join('');
+  $('#ck').querySelectorAll('.item').forEach(it => {
+    const item = CONFIG.ITENS.find(i => i.id === it.dataset.id);
+    it.querySelectorAll('button').forEach(b => b.onclick = () => {
+      it.querySelectorAll('button').forEach(x => x.classList.remove('on', 'good', 'bad', 'na'));
+      const v = b.dataset.v;
+      b.classList.add('on', v === 'NA' ? 'na' : v === item.ok ? 'good' : 'bad');
+      resp[it.dataset.id] = v; it.classList.remove('miss'); previa();
+    });
+  });
+}
+const naoConforme = i => resp[i.id] && resp[i.id] !== 'NA' && resp[i.id] !== i.ok;
+const operadorImpedido = () => tipo === PRE && CONFIG.ITENS.some(i => i.tipo === 'operador' && naoConforme(i));
+function montarSelectEquip(){
+  const sel = $('#f-id'), atual = sel.value || new URLSearchParams(location.search).get('pemt') || '';
+  sel.innerHTML = '<option value="">Selecione…</option>' + data.equipamentos.map(e => `<option value="${esc(e.ID)}">${esc(nomeEq(e))}${e.Apelido ? ' (' + esc(e.ID) + ')' : ''}${e.Modelo ? ' – ' + esc(e.Modelo) : ''}</option>`).join('');
+  if (atual) sel.value = atual;
+  const locais = [...new Set(data.registros.map(r => String(r.Local || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  $('#locais').innerHTML = locais.map(l => `<option value="${esc(l)}">`).join('');
+  const hf = $('#h-filtro'), hv = hf.value;
+  hf.innerHTML = '<option value="">Todos</option>' + data.equipamentos.map(e => `<option value="${esc(e.ID)}">${esc(nomeEq(e))}</option>`).join('');
+  hf.value = hv;
+}
+$('#f-tipo').querySelectorAll('button').forEach(b => b.onclick = () => {
+  $('#f-tipo').querySelectorAll('button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); tipo = b.dataset.v;
+  $('#ck-card').classList.toggle('hidden', tipo !== PRE);
+  $('#env-card').classList.toggle('hidden', tipo !== PRE);
+  previa();
+});
+function calcStatus(){
+  if (tipo !== PRE) return '';
+  let crit = false, rest = false;
+  CONFIG.ITENS.forEach(i => { if (naoConforme(i)) { if (i.tipo === 'critico') crit = true; else if (i.tipo === 'restricao') rest = true; } });
+  return crit ? 'Bloqueada' : rest ? 'Liberada com restrição' : 'Liberada';
+}
+function calcUso(status){
+  if (tipo === PRE) return status === 'Bloqueada' ? 'Fora de operação' : operadorImpedido() ? '' : 'Em uso';
+  if (tipo === FIM) return 'Disponível';
+  return '';
+}
+function previa(){
+  const s = calcStatus();
+  if (tipo === PRE) {
+    const falta = CONFIG.ITENS.filter(i => !resp[i.id]).length;
+    $('#res').innerHTML = `Resultado: ${chip(s)}` + (falta ? ` <span class="muted">· faltam ${falta} item(ns)</span>` : '') +
+      (s === 'Bloqueada' ? '<div class="err">Item crítico não conforme: NÃO utilize a plataforma. Comunique a manutenção.</div>' : '') +
+      (operadorImpedido() ? '<div class="err">Uso NÃO autorizado: operador sem capacitação para este modelo ou envolvidos sem todos os EPIs.</div>' : '');
+  } else {
+    const e = data.equipamentos.find(x => x.ID === $('#f-id').value);
+    $('#res').innerHTML = e ? `Status mantido: ${chip(e.Status)}${tipo === FIM ? ' · uso passa para <b>Disponível</b>' : ''}` : '';
+  }
+}
+$('#f-id').onchange = previa;
+
+
+$('#form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const erro = m => { $('#f-err').textContent = m; $('#f-err').classList.remove('hidden'); };
+  $('#f-err').classList.add('hidden');
+  const id = $('#f-id').value, op = $('#f-op').value.trim(), local = $('#f-local').value.trim(), obs = $('#f-obs').value.trim();
+  const mat = $('#f-mat').value.trim(), ativ = $('#f-ativ').value.trim(), env = $('#f-env').value.trim();
+  if (!id) return erro('Selecione o equipamento.');
+  if (!op) return erro('Informe o nome do emitente.');
+  if (!mat) return erro('Informe a matrícula.');
+  if (!local) return erro('Informe a referência do local.');
+  const itensNC = [];
+  if (tipo === PRE) {
+    const falta = CONFIG.ITENS.filter(i => !resp[i.id]);
+    if (falta.length) { falta.forEach(i => $(`.item[data-id="${i.id}"]`).classList.add('miss')); return erro(`Responda todos os itens do checklist (faltam ${falta.length}).`); }
+    CONFIG.ITENS.forEach(i => { if (naoConforme(i)) itensNC.push(`${i.id} ${i.txt} = ${resp[i.id]}`); });
+    if (itensNC.length && !obs) return erro('Descreva a não conformidade no campo de observações.');
+  }
+  const status = calcStatus();
+  const respostas = tipo === PRE ? CONFIG.ITENS.map(i => `${i.id}:${resp[i.id]}`).join(' ') : '';
+  const payload = {
+    id, tipo, operador: op, matricula: mat, ativ, envolvidos: env, respostas, local, obs, status, uso: calcUso(status), itensNC,
+    horimetro: num($('#f-hor').value),
+    dataHora: new Date().toISOString()
+  };
+  store.set('pemt_operador', op); store.set('pemt_matricula', mat);
+  const btn = $('#btn-send'); btn.disabled = true; btn.textContent = 'Enviando…';
+  let guardado = false;
+  try { await postar(payload); }
+  catch(e){
+    if (e.servidor) { btn.disabled = false; btn.textContent = 'Enviar registro'; return erro(e.message); }
+    fila.add(payload); guardado = true;
+  }
+  btn.disabled = false; btn.textContent = 'Enviar registro';
+  const eqAtual = data.equipamentos.find(x => x.ID === id);
+  $('#done-title').textContent = guardado ? 'Sem conexão: registro guardado no aparelho' : 'Registro enviado';
+  $('#done-chip').innerHTML = chip(status || (eqAtual && eqAtual.Status));
+  $('#done-txt').textContent = `${nomePorId(id)} · ${tipo} · ${local}` + (guardado ? ' · será enviado quando houver sinal' : '') + (operadorImpedido() ? ' · USO NÃO AUTORIZADO para este operador' : '');
+  $('#form').classList.add('hidden'); $('#done').classList.remove('hidden');
+  window.scrollTo(0, 0);
+  if (!guardado) carregar().then(renderTudo).catch(() => {});
+});
+$('#btn-new').onclick = () => {
+  resp = {}; $('#form').reset(); $('#f-op').value = store.get('pemt_operador') || ''; $('#f-mat').value = store.get('pemt_matricula') || '';
+  montarChecklist(); montarSelectEquip();
+  $('#done').classList.add('hidden'); $('#form').classList.remove('hidden');
+  previa(); window.scrollTo(0, 0);
+};
+
+/* ---------------- Painel ---------------- */
+function kpis(){
+  const eq = data.equipamentos, c = s => eq.filter(e => e.Status === s).length;
+  const atrasadas = eq.filter(e => { const h = horasDesde(e.UltimoRegistro); return h == null || h > CONFIG.HORAS_ALERTA; }).length;
+  const k = [
+    ['', eq.length, 'Plataformas'],
+    ['ok', c('Liberada'), 'Liberadas'],
+    ['warn', c('Liberada com restrição'), 'Com restrição'],
+    ['bad', c('Bloqueada'), 'Bloqueadas'],
+    ['', eq.filter(e => e.Uso === 'Em uso').length, 'Em uso agora'],
+    [atrasadas ? 'bad' : '', atrasadas, `Sem registro > ${CONFIG.HORAS_ALERTA} h`]
+  ];
+  $('#kpis').innerHTML = k.map(x => `<div class="kpi ${x[0]}"><b>${x[1]}</b><span>${x[2]}</span></div>`).join('');
+}
+function tabelaEq(){
+  const linhas = [...data.equipamentos].sort((a,b) => String(a.ID).localeCompare(String(b.ID), 'pt-BR', {numeric:true})).map(e => {
+    const h = horasDesde(e.UltimoRegistro);
+    const hTxt = h == null ? '—' : h < 1 ? '< 1 h' : Math.round(h) + ' h';
+    const late = h == null || h > CONFIG.HORAS_ALERTA;
+    return `<tr><td><b>${esc(nomeEq(e))}</b><br><span class="muted">${esc(e.ID)}${e.Modelo ? ' · ' + esc(e.Modelo) : ''}</span></td><td>${chip(e.Status)}</td><td>${esc(e.Uso || '—')}</td><td>${esc(e.Local || '—')}</td><td>${esc(e.Operador || '—')}</td><td>${fmt(e.UltimoRegistro)}<br><span class="muted">${esc(e.UltimoTipo || '')}</span></td><td class="${late ? 'late' : ''}">${hTxt}</td></tr>`;
+  }).join('');
+  $('#t-eq').innerHTML = '<tr><th>Equipamento</th><th>Status</th><th>Uso</th><th>Local</th><th>Operador</th><th>Último registro</th><th>Há</th></tr>' + (linhas || '<tr><td colspan="7" class="muted">Nenhuma plataforma cadastrada.</td></tr>');
+}
+function tabelaHist(){
+  const f = $('#h-filtro').value;
+  const regs = data.registros.filter(r => !f || r.ID === f).slice(0, 100);
+  $('#t-hist').innerHTML = '<tr><th>Data/hora</th><th>Equipamento</th><th>Tipo</th><th>Status</th><th>Local</th><th>Operador</th><th>Não conformidades</th></tr>' +
+    (regs.map(r => `<tr><td>${fmt(r.DataHora)}</td><td>${esc(nomePorId(r.ID))}</td><td>${esc(r.Tipo)}</td><td>${chip(r.Status)}</td><td>${esc(r.Local)}</td><td>${esc(r.Operador)}</td><td>${esc([r.ItensNC, r.NaoConformidades].filter(Boolean).join(' — ')) || '<span class="muted">—</span>'}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="muted">Sem registros.</td></tr>');
+}
+$('#h-filtro').onchange = tabelaHist;
+
+function renderTudo(){
+  montarSelectEquip(); previa();
+  if (!$('#v-pai').classList.contains('hidden')) {
+    kpis(); tabelaEq(); tabelaHist();
+    $('#upd').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) + (DEMO ? ' · demonstração' : '');
+  }
+}
+async function atualizarTudo(){
+  try { await enviarFila(); await carregar(); }
+  catch(e){
+    const c = store.get('pemt_cache');
+    if (c && !DEMO) { try { data = JSON.parse(c); } catch(_){} }
+    $('#upd').textContent = 'Sem conexão com a planilha: ' + e.message;
+  }
+  renderTudo();
+}
+$('#btn-ref').onclick = atualizarTudo;
+
+/* ---------------- Abas ---------------- */
+function mostrar(v){
+  const reg = v === 'reg';
+  $('#v-reg').classList.toggle('hidden', !reg); $('#v-pai').classList.toggle('hidden', reg);
+  $('#tab-reg').classList.toggle('active', reg); $('#tab-pai').classList.toggle('active', !reg);
+  if (!reg) renderTudo();
+}
+$('#tab-reg').onclick = () => mostrar('reg');
+$('#tab-pai').onclick = () => mostrar('pai');
+
+/* ---------------- Início ---------------- */
+(async function iniciar(){
+  if (DEMO) $('#demo-banner').classList.remove('hidden');
+  $('#f-op').value = store.get('pemt_operador') || '';
+  $('#f-mat').value = store.get('pemt_matricula') || '';
+  montarChecklist(); mostrarFila();
+  const veioDoQR = new URLSearchParams(location.search).has('pemt') || location.hash === '#registrar';
+  mostrar(veioDoQR ? 'reg' : 'pai');
+  if (!DEMO && !pin) pedirPin(false); else await atualizarTudo();
+  setInterval(() => { if (!$('#v-pai').classList.contains('hidden')) atualizarTudo(); else enviarFila(); }, CONFIG.ATUALIZAR_SEG * 1000);
+  window.addEventListener('online', () => enviarFila().then(() => carregar()).then(renderTudo).catch(() => {}));
+})();
+</script>
+</body>
+</html>
